@@ -1,8 +1,48 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-import requests
 import json
+import re
+import requests
 import time
+
+from io import StringIO, open
+from lxml import etree
+
+def get_0050(html_file=''):
+    """
+    This function is used to get stock list of TW0050 from www.cnyes.com.
+    
+    P.S. in current version, it's recommended you to pass html file in the arguments to this funciton.
+    """
+    
+    # Get HTML raw data
+    if html_file:
+        with open(html_file, 'r', encoding='utf8') as f:
+            raw = f.read()
+    else:
+        url = "https://www.cnyes.com/twstock/Etfingredient/0050.htm"
+        session = requests.Session()
+        raw = session.get(url,verify=False).text
+    
+    stocks = {}
+    if raw:
+        # Parse HTML
+        parser = etree.HTMLParser()
+        html = etree.parse(StringIO(raw), parser)
+        #pattern = re.compile('/twstock/profile/*.htm')
+        for hyperlink in html.xpath("//a[contains(@href, '/twstock/profile/')]"):
+            url = hyperlink.get("href")
+            stock_id = re.sub("[^0-9]", "", url)
+            stock_name = hyperlink.text.strip()
+            
+            if stock_id != "0050":
+                stocks.setdefault(stock_id, stock_name)
+            
+            
+    return stocks
+    
+    
 
 class TWSE:
     """
@@ -45,4 +85,5 @@ if __name__ == "__main__":
     
     obj = TWSE()
     print(json.dumps(obj.get('tse_1101.tw'), indent=4))
+    #get_0050('0050.html')
     
