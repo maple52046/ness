@@ -1,0 +1,18 @@
+{
+  "name": "ness-portal",
+  "version": "1.0.0",
+  "description": "Ness is an open source finance platform",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^4.16.2",
+    "mysql": "^2.15.0",
+    "pug": "^2.0.0-rc.4"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "Ku Chen-Hao <maple52046@gmail.com>",
+  "license": "GPLv3"
+}
