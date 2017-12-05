@@ -18,7 +18,7 @@ This program is developed on an AWS Ubuntu instance. To setup this program quick
 This program is written with Python 3. To run this program, you need to:
 
 ```bash
-sudo apt install python3 python3-lxml python3-pymysql python3-yaml python3-requests python3-sqlalchemy
+sudo apt install python3 python3-lxml python3-pymysql python3-yaml python3-requests python3-sqlalchemy python3-influxdb
 ```
 
 ### Install MariaDB
@@ -41,6 +41,18 @@ Then, edit `config.ini` to configure database connection:
 ```ini
 [static_data]
 connection = mysql://ness:ness@localhost/ness?charset=utf8
+```
+
+### Install InfluxDB
+
+This program use InfluxDB to store dynamic data.
+
+Install InfluxDB by reference the instructions of [official guide](https://portal.influxdata.com/downloads#influxdb):
+
+```bash
+wget https://dl.influxdata.com/influxdb/releases/influxdb_1.4.2_amd64.deb
+sudo dpkg -i influxdb_1.4.2_amd64.deb
+sudo systemctl start influxdb
 ```
 
 ## Usage

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from configparser import ConfigParser
+from influxdb import InfluxDBClient
 from models import Stock, Base
 from sqlalchemy import create_engine
 
@@ -10,3 +11,7 @@ config.read('config.ini')
 
 # Create DB engine
 engine = create_engine(config['static_data']['connection'])
+
+# InfluxDB client
+influx = config["influxdb"]
+influxclient = InfluxDBClient(influx["host"],  influx["port"], influx["user"], influx["password"], influx["database"])

@@ -8,7 +8,7 @@ The following picture describes the platform architecture of Ness:
 
 ![Platform Architecture of NESS](https://i.imgur.com/ZDdqMoB.jpg)
 
-This platform is composed by three main system:
+This platform is composed by three main systems:
 
 - Data loader
 - Data analyzer
