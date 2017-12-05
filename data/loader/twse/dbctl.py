@@ -10,7 +10,7 @@ config = ConfigParser()
 config.read('config.ini')
 
 # Create DB engine
-engine = create_engine(config['static_data']['connection'])
+engine = create_engine(config['mariadb']['connection'])
 
 # InfluxDB client
 influx = config["influxdb"]

@@ -25,11 +25,17 @@ sudo apt install python3 python3-lxml python3-pymysql python3-yaml python3-reque
 
 This program use MariaDB to store static data like stock list.
 
-It's recommended to install MariaDB via apt with MariaDB official repository: https://downloads.mariadb.org/mariadb/repositories/#mirror=ossplanet&distro=Ubuntu&distro_release=xenial--ubuntu_xenial&version=10.2
+Install MariaDB by reference the instructions of [official guide](https://downloads.mariadb.org/mariadb/repositories/#mirror=ossplanet&distro=Ubuntu&distro_release=xenial--ubuntu_xenial&version=10.2):
 
-After MariaDB is installed on your system, you need to create a database and account from this program:
+```bash
+sudo apt install software-properties-common
+sudo apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xF1656F24C74CD1D8
+echo 'deb [arch=amd64,i386,ppc64el] http://ftp.ubuntu-tw.org/mirror/mariadb/repo/10.2/ubuntu xenial main' | sudo tee /etc/apt/sources.list.d/mariadb.list
+sudo apt update
+sudo apt install mariadb-server
+```
 
-Login to MariaDB with command `sudo mysql`, run commands:
+After MariaDB is installed on your system, you need to login to MariaDB with command `sudo mysql` , create a database and account from this program with the following commands:
 
 ```sql
 > create database ness;
@@ -39,7 +45,7 @@ Login to MariaDB with command `sudo mysql`, run commands:
 Then, edit `config.ini` to configure database connection:
 
 ```ini
-[static_data]
+[mariadb]
 connection = mysql://ness:ness@localhost/ness?charset=utf8
 ```
 
@@ -53,6 +59,17 @@ Install InfluxDB by reference the instructions of [official guide](https://porta
 wget https://dl.influxdata.com/influxdb/releases/influxdb_1.4.2_amd64.deb
 sudo dpkg -i influxdb_1.4.2_amd64.deb
 sudo systemctl start influxdb
+```
+
+Then, edit `config.ini` to configure database connection:
+
+```ini
+[influxdb]
+host = localhost
+port = 8086
+user = root
+password = root
+database = ness
 ```
 
 ## Usage
