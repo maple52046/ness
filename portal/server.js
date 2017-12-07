@@ -1,11 +1,10 @@
 var express = require('express')
 var mysql = require('mysql');
 var pug = require('pug')
+var epochtime = require('./epochtime');
 
 var fs = require('fs');
 var app = express()
-
-var sql = "select t,y,o,h,l,z,b,g,a,f,v,tv,u,w from stock;"
 
 app.set('view engine', 'pug');
 app.get('/', function (req, res) {
@@ -14,48 +13,18 @@ app.get('/', function (req, res) {
 })
 
 app.use('/css', express.static('css'));
-app.get('/stock', function(req, res){
-	var con = mysql.createConnection({
-		host: "localhost",
-		user: "ness",
-		password: "ness",
-		database: "ness"
-	});
-	var recordList = [];
+app.get('/intraday', function(req, res){
+	// Set the time range
+	var marketOpen = epochtime(8, 30);
+	var marketClosed = epochtime(13, 30);
 
-	con.connect(function(err){
-		if (err) throw err;
-	})
+	// Set the grafana url
+	var grafana_url = "http://" +  req.get('host') +":3000/dashboard-solo/db/intraday?orgId=1&panelId=1&from=" + marketOpen + ".&to=" + marketClosed + "&theme=light"
 
-	con.query(sql, function(err, result){
-		if (err) throw err;
-		for (var i=0; i<result.length; i++){
-			var record = {
-				't': result[i].t,
-				'y': result[i].y,
-				'o': result[i].o,
-				'h': result[i].h,
-				'l': result[i].l,
-				'z': result[i].z,
-				'b': result[i].b,
-				'g': result[i].g,
-				'a': result[i].a,
-				'f': result[i].f,
-				'v': result[i].v,
-				'tv': result[i].tv,
-				'u': result[i].u,
-				'w': result[i].w
-			}
-			recordList.push(record)
-		}
-		res.send(pug.renderFile('templates/stock.pug', {
-			"stock": '1101',
-			"records": recordList
-		}))
-
-	})
-
-	con.end()
+	// response
+	res.send(pug.renderFile('templates/intraday.pug', {
+		"grafana_url": grafana_url
+	}));
 })
 
 app.listen(80)
