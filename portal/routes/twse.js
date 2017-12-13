@@ -1,6 +1,11 @@
 var express = require('express');
 var router = express.Router();
 
+const grafanaUrl = {
+	"prefix": "/grafana/dashboard-solo/db/summary?orgId=1&from=",
+	"suffix": "&theme=light&panelId=1"
+}
+
 var epochTime = function (hour, minute){
 	var newDate = new Date();
 	newDate.setHours(hour, minute, 0, 0);
@@ -8,14 +13,16 @@ var epochTime = function (hour, minute){
 };
 
 /* GET users listing. */
-router.get('/', function(req, res, next) {
+router.get('/intraday', function(req, res, next) {
+	// Get Stock from HTTP request
+	var symbol = req.query.symbol;
+
 	// Set the time range
 	var marketOpen = epochTime(8, 30);
 	var marketClosed = epochTime(13, 30);
-	var urls = [];
 
 	// Set the grafana url
-	var url = "/grafana/dashboard-solo/db/summary?orgId=1&from=" + marketOpen + "&to=" + marketClosed + "&var-channel=1101.tw&theme=light&panelId=1"
+	var url = grafanaUrl["prefix"] + marketOpen + "&to=" + marketClosed + "&var-channel=" + symbol + grafanaUrl["suffix"];
 	res.render('intraday', { "grafana_url": url });
 });
 
