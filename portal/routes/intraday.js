@@ -7,15 +7,15 @@ var epochTime = function (hour, minute){
 	return newDate.getTime();
 };
 
-
 /* GET users listing. */
 router.get('/', function(req, res, next) {
 	// Set the time range
 	var marketOpen = epochTime(8, 30);
 	var marketClosed = epochTime(13, 30);
+	var urls = [];
 
 	// Set the grafana url
-	var url = "/grafana/dashboard-solo/db/intraday?orgId=1&from=" + marketOpen + "&to=" + marketClosed + "&panelId=1&theme=light"
+	var url = "/grafana/dashboard-solo/db/summary?orgId=1&from=" + marketOpen + "&to=" + marketClosed + "&var-channel=1101.tw&theme=light&panelId=1"
 	res.render('intraday', { "grafana_url": url });
 });
 

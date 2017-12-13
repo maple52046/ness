@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import json
 
 from configparser import ConfigParser
 from datetime import datetime, timedelta
@@ -25,6 +26,19 @@ try:
 except:
 	timezone = 0
 
+fields = {
+	"o": "open",
+	"y": "yesterday",
+	"v": "volume",
+	"h": "high",
+	"l": "low",
+	"a": "best_sell_price",
+	"f": "best_sell_number",
+	"b": "best_buy_price",
+	"g": "best_buy_number",
+	"z": "price"
+}
+
 class StockFetcher:
 	def __init__(self, stocks=None):
 		if stocks:
@@ -36,38 +50,7 @@ class StockFetcher:
 			self.stocks = session.query(Stock.symbol, Stock.name).filter(Stock.tag == tag)
 			session.close()
 
-	def get_closed_info(self, querytime=epochtime()):
-		"""
-		This function is used to get stocks after market is closed.
-		"""
-		fields = {
-			"open": "o",
-			"yesterday": "y",
-			"volume": "v",
-			"high": "h",
-			"low": "l",
-			"best_sell_price": "a",
-			"best_sell_number": "f",
-			"best_buy_price": "b",
-			"best_buy_number": "g"
-		}
-		return self.get_stocks(querytime, "twse_stock_closed", fields)
-
-	def get_intraday_info(self, querytime=epochtime()):
-		"""
-		This function is used to get intraday information of stocks
-		"""
-		fields = {
-			"price": "z",
-			#"temporal_volume": "tv",
-			#"best_sell_price": "a",
-			#"best_sell_number": "f",
-			#"best_buy_price": "b",
-			#"best_buy_number": "g"
-		}
-		return self.get_stocks(querytime, "twse_stock_intraday", fields)
-
-	def get_stocks(self, querytime, measurement, fields):
+	def get_stocks(self, querytime=epochtime(), intraday=False):
 		"""
 		This function is used to get last price of stocks from Internet with data loader.
 		"""
@@ -81,12 +64,15 @@ class StockFetcher:
 					# Get stock
 					stock_id = "tse_{}".format(symbol)
 					logger.debug("Query stock {} with time {}".format(stock_id, querytime))
-					stock = loader.get(stock_id, querytime)["msgArray"][0]
-					data_pack = self.generate_influxdb_data(stock, measurement, fields)
-					if data_pack["fields"]:
-						data.append(data_pack)
-				except:
-					logger.error("Failed to query stock {}".format(stock_id))
+					stock= loader.get(stock_id, querytime)["msgArray"][0]
+					if intraday == True and "z" not in stock.keys():
+						logger.debug("The intraday data of stock {} didn't have price".format(stock_id))
+					else:
+						data_pack = self.generate_influxdb_data(stock, intraday)
+						if data_pack["fields"]:
+							data.append(data_pack)
+				except KeyError:
+					logger.error("Failed to query stock {} with time {}".format(stock_id, querytime))
 
 			if data:
 				# Store dynamic data to influxdb
@@ -95,7 +81,7 @@ class StockFetcher:
 
 			return True
 
-	def generate_influxdb_data(self, stock, measurement, fields):
+	def generate_influxdb_data(self, stock, intraday=False):
 		"""
 		This function is used to generate data object which will be stored to InfluxDB.
 		The argument 'fields' is a Python dict which is a 'filed name' and 'stock index' mapping,
@@ -109,19 +95,18 @@ class StockFetcher:
 
 		if stock:
 			# Generate data
-			data = {"measurement": measurement}
+			data = {"measurement": "twse"}
 			utctime = datetime.fromtimestamp(int((int(stock["tlong"]) - 1000) / 1000)) - timedelta(hours=timezone)
 			data["time"] = utctime.strftime("%Y-%m-%dT%H:%M:%SZ")
 			data["tags"] = {
 				"channel": stock["ch"],
-				"name": stock["n"]
+				"name": stock["n"],
+				"intraday": intraday
 			}
 			data["fields"] = {}
-			for name, index in fields.items():
-				try:
-					data["fields"][name] = stock[index]
-				except:
-					logger.error("Stock didn't have {}".format(name))
+			for k, v in stock.items():
+				if k in fields.keys():
+					data["fields"][fields[k]] = v
 
 		return data
 
@@ -139,13 +124,35 @@ def daily(interval=60):
 			print("Market closed")
 			break
 		else:
-			fetcher.get_intraday_info()
+			fetcher.get_stocks(intraday=True)
 			next_time = current_time + timedelta(0, interval)
 			while datetime.now() < next_time:
 				sleep(1)
-	fetcher.get_closed_info()
+	fetcher.get_stocks()
+
+def oneshot():
+	fetcher = StockFetcher()
+	fetcher.get_stocks()
 
 if __name__ == "__main__":
-	daily()
+	import sys
+	from optparse import OptionParser
+
+	parser = OptionParser()
+	parser.add_option("-d", "--daily", dest="daily", action="store_true")
+	parser.add_option("-s", "--oneshot", dest="oneshot", action="store_true")
+	(options, args) = parser.parse_args()
+
+	if options.daily == True:
+		print("start daily job")
+		daily()
+	elif options.oneshot == True:
+		print("start oneshot job")
+		oneshot()
+	else:
+		parser.print_help()
+		sys.exit(1)
+
+	sys.exit(0)
 
 # vim: ts=4 sw=4 noexpandtab
