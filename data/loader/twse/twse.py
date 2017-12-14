@@ -16,7 +16,7 @@ class TWSE:
         self.session = None
 
         
-    def create_session(self):
+    def create_session(self, timeout=5):
         """
         Connect to TWSE and get cookies with new session.
         """
@@ -24,10 +24,10 @@ class TWSE:
         self.session = requests.Session()
         self.session.headers.update(self.headers)
         url = '{}/index.jsp'.format(self.baseurl)
-        self.session.get(url).cookies
+        self.session.get(url, timeout=timeout).cookies
              
            
-    def get(self, stock, querytime=''):
+    def get(self, stock, querytime='', timeout=5):
         """
         This function will create session to connect to TWSE, and pull stock data with current time.
         To use this function, you need to pass stock ID (e.g. "tse_1101.tw") in arguments, 
@@ -43,7 +43,7 @@ class TWSE:
             self.baseurl, stock, querytime
         )
 
-        return self.session.get(url).json()
+        return self.session.get(url, timeout=timeout).json()
     
 if __name__ == "__main__":
     

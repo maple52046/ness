@@ -44,7 +44,7 @@ router.get('/intraday', function(req, res, next) {
 	var symbol = req.query.symbol;
 
 	// Set the time range
-	var marketOpen = epochTime(8, 30);
+	var marketOpen = epochTime(9, 0);
 	var marketClosed = epochTime(13, 30);
 
 	// Set the grafana url
