@@ -25,22 +25,16 @@ class BollingerBands(list):
 		self.mean = mean(self)
 		self.std = std(self, self.mean)
 
-	def top_band(self):
-		return (self.mean + self.std*2)
-
-	def middle_band(self):
-		return self.mean
-
-	def button_band(self):
-		return (self.mean - self.std*2)
-		
-		
+	def value(self):
+		return {'top': (self.mean + self.std*2),
+			'middle': self.mean,
+			'button': (self.mean - self.std*2)}
 
 if __name__ == "__main__":
 	bb = BollingerBands(list(range(20)))
-	print(bb.top_band())
+	print(bb.value())
 	bb.append(21)
-	print(bb.top_band())
+	print(bb.value())
 	print(len(bb))
 
 # vim: ts=4 sw=4 noexpandtab

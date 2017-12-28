@@ -2,7 +2,6 @@ var express = require('express');
 var router = express.Router();
 
 var mariadbClient = require('mariasql');
-
 const mariadb = new mariadbClient({
 	host: "localhost",
 	user: "ness",
@@ -10,6 +9,14 @@ const mariadb = new mariadbClient({
 	db: "ness",
     charset :"utf8"
 });
+
+const Influx = require("influx");
+const influx = new Influx.InfluxDB({
+	host: 'localhost',
+	database: 'ness'
+});
+
+var pysh = require('python-shell');
 
 const grafanaUrl = {
 	"prefix": "/grafana/dashboard-solo/db/summary?orgId=1&from=",
@@ -48,8 +55,49 @@ router.get('/intraday', function(req, res, next) {
 	var marketClosed = epochTime(13, 30);
 
 	// Set the grafana url
-	var url = grafanaUrl["prefix"] + marketOpen + "&to=" + marketClosed + "&var-channel=" + symbol + grafanaUrl["suffix"];
+	var url = grafanaUrl["prefix"] + marketOpen + "&to=" + marketClosed + 
+		"&var-channel=" + symbol + grafanaUrl["suffix"];
 	res.render('intraday', { "grafana_url": url });
+});
+
+var dateToEpochTime = function (dateString) {
+
+	var patten = /(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/;
+	var date = new Date(dateString.replace(patten, "$1-$2-$3T$4:$5:$6Z"));
+	return date.getTime()*1000*1000;
+	
+}
+
+router.get('/backtest', function(req, res, next){
+	// time range
+	var start = dateToEpochTime(req.query.start);
+	var end = dateToEpochTime(req.query.end);
+
+	// symbol
+	var symbol = req.query.symbol.split('-');
+
+	// get data from database
+	var queryString = "select channel, price from twse where time >= " + start + " and time <= " + end + 
+		" and (channel = '" + symbol[0] + "' or channel = '" + symbol[1] + "')";
+	influx.query(queryString).then(stocks => {
+		var options = {
+			mode: 'json',
+			pythonPath: '/usr/bin/python3',
+			pythonOptions: '-u',
+			scriptPath: '/home/ubuntu/ness/data/analyzer',
+			args: [JSON.stringify(stocks)]
+		};
+
+		/*var stretage = new pysh('stretage.py', options);
+		stretage.on('results', function (results) {
+			res.json(results);
+		});*/
+		pysh.run('stretage.py', options, function(err, results) {
+			//if (err) res.json({});
+			res.json(results);
+		});
+	});
+	//res.send(queryString);
 });
 
 module.exports = router;
