@@ -8,7 +8,7 @@ import sys
 	
 def pair_trade_with_bollinger_bands(stocks):
 	"""
-	Pari Trade with Bollinger Bands (for backtest)
+	Pair Trade with Bollinger Bands (for backtest)
 	"""
 
 	# Convert data

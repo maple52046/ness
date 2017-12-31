@@ -7,7 +7,7 @@ const mariadb = new mariadbClient({
 	user: "ness",
 	password: "ness",
 	db: "ness",
-    charset :"utf8"
+	charset :"utf8"
 });
 
 const Influx = require("influx");
@@ -68,6 +68,10 @@ var dateToEpochTime = function (dateString) {
 	
 }
 
+var dateRangeToEpochTime = function (startDateString, endDateString){
+	return [dateToEpochTime(startDateString), dateToEpochTime(endDateString)];
+}
+
 router.get('/backtest', function(req, res, next){
 	// time range
 	var start = dateToEpochTime(req.query.start);
@@ -88,16 +92,43 @@ router.get('/backtest', function(req, res, next){
 			args: [JSON.stringify(stocks)]
 		};
 
-		/*var stretage = new pysh('stretage.py', options);
-		stretage.on('results', function (results) {
-			res.json(results);
-		});*/
 		pysh.run('stretage.py', options, function(err, results) {
 			//if (err) res.json({});
 			res.json(results);
 		});
 	});
 	//res.send(queryString);
+});
+
+router.get('/backtest/pair', function(req, res, next){
+	var [start, end] = dateRangeToEpochTime(req.query.start, req.query.end);
+	var queryString = "select channel,price from twse where time >= " + start + " and time <= " + end;
+	var stockObj = {};
+	influx.query(queryString).then(stocks => {
+		stocks.forEach(function(stock){
+			var price = parseFloat(stock['price']);
+			var channel = stock['channel'];
+			if (stockObj.hasOwnProperty(channel) == true){
+				if (stockObj[channel] < price){
+					stockObj[channel] = price;
+				}
+			}else{
+				stockObj[channel] = price;
+			}
+		});
+
+		var options = {
+			mode: 'json',
+			pythonPath: '/usr/bin/python3',
+			pythonOptions: '-u',
+			scriptPath: '/home/ubuntu/ness/data/analyzer/algorithm',
+			args: [JSON.stringify(stockObj)]
+		};
+
+		pysh.run('pair.py', options, function(err, results) {
+			res.json(results);
+		});
+	});
 });
 
 module.exports = router;

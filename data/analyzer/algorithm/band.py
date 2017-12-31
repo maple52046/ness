@@ -11,7 +11,7 @@ def std(array, xbar):
 	s /= (len(array) - 1)
 	return sqrt(s)
 	
-class BollingerBands(list):
+class BollingerBand(list):
 	def __init__(self, prices, length=20):
 		list.__init__(self, prices)
 		self.mean = mean(prices)
@@ -28,7 +28,7 @@ class BollingerBands(list):
 	def value(self):
 		return {'top': (self.mean + self.std*2),
 			'middle': self.mean,
-			'button': (self.mean - self.std*2)}
+			'bottom': (self.mean - self.std*2)}
 
 if __name__ == "__main__":
 	bb = BollingerBands(list(range(20)))
