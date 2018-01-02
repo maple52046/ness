@@ -88,16 +88,15 @@ router.get('/backtest', function(req, res, next){
 			mode: 'json',
 			pythonPath: '/usr/bin/python3',
 			pythonOptions: '-u',
-			scriptPath: '/home/ubuntu/ness/data/analyzer',
+			scriptPath: 'external_modules/analyzers/algorithm',
 			args: [JSON.stringify(stocks)]
 		};
 
 		pysh.run('stretage.py', options, function(err, results) {
-			//if (err) res.json({});
+			if (err) res.json({});
 			res.json(results);
 		});
 	});
-	//res.send(queryString);
 });
 
 router.get('/backtest/pair', function(req, res, next){
@@ -121,11 +120,13 @@ router.get('/backtest/pair', function(req, res, next){
 			mode: 'json',
 			pythonPath: '/usr/bin/python3',
 			pythonOptions: '-u',
-			scriptPath: '/home/ubuntu/ness/data/analyzer/algorithm',
+			scriptPath: 'external_modules/analyzers/algorithm',
 			args: [JSON.stringify(stockObj)]
 		};
 
 		pysh.run('pair.py', options, function(err, results) {
+			if (err) res.json({});
+			//if (err) throw err;
 			res.json(results);
 		});
 	});
