@@ -55,14 +55,15 @@ var dateRangeToEpochTime = function (startDateString, endDateString){
 	return [start, end]
 }
 
-var tmpFile = function (data){
-	var filePath = '/tmp/ness-' + uuid()
-	fs.writeFile(filePath, data, (err) => {
+var datasource = function (data){
+	var filename = '/tmp/ness-' + uuid()
+	fs.writeFileSync(filename, data, (err) => {
 		if (err){
-			console.log(err);
+			console.log(err)
+			return null
 		}
 	})
-	return filePath
+	return filename
 }
 
 const grafanaUrl = {
@@ -134,30 +135,31 @@ router.get('/intraday', function(req, res, next) {
 
 router.get('/strategy', function(req, res, next){
 	res.setHeader('Content-Type', 'application/json')
+	var strategyID = req.query.id || 1
 	var primary = req.query.primary
 	var secondary = req.query.secondary
 	var [start, end] = dateRangeToEpochTime(req.query.start, req.query.end)
 	//var stockObj = {}
 
-	// Generate InfluxDB query command
-	var queryString = "select channel,price from twse where time >= " + start + " and time <= " + end + " and channel =~ /" + primary + "|" + secondary + "/"
-	console.log(queryString)
-	influx.query(queryString).then(stockPrices => {
 
-		//res.json(stockPrices)
+	var qs = "select channel,price from twse where time >= " + start + " and time <= " + end + 
+		" and channel =~ /" + primary + "|" + secondary + "/"
+	influx.query(qs).then(stocks =>{
+		//res.json(stocks)
 
 		// Prepare Python runtime environment
-		var dataFile = tmpFile(JSON.stringify(stockPrices))
+		var dataFile = datasource(JSON.stringify(stocks))
 		var options = {
 			mode: 'json',
 			pythonPath: '/usr/bin/python3',
 			pythonOptions: '-u',
-			scriptPath: 'external_modules/',
+			scriptPath: 'external_modules/analyzers/strategy',
 			args: [primary, secondary, dataFile]
 		}
 
 		// Run Python program to analysis stock
-		pysh.run('analyzers/algorithm/pair.py', options, function(err, results) {
+		var strategy = "strategy_" + strategyID + ".py"
+		pysh.run(strategy, options, function(err, results) {
 			if (err) {
 				console.log(err)
 				res.json({})
@@ -165,6 +167,7 @@ router.get('/strategy', function(req, res, next){
 			res.json(results[0])
 		})
 	})
+
 })
 
 module.exports = router

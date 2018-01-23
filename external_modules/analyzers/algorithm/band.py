@@ -11,7 +11,7 @@ def std(array, xbar):
 	s /= (len(array) - 1)
 	return sqrt(s)
 	
-class BollingerBand(list):
+class Bollinger(list):
 	def __init__(self, prices, length=20):
 		list.__init__(self, prices)
 		self.mean = mean(prices)
@@ -30,11 +30,32 @@ class BollingerBand(list):
 			'middle': self.mean,
 			'bottom': (self.mean - self.std*2)}
 
+def bollinger_band(stocks):
+	band = None
+	data = []
+	bands = []
+	for stock in stocks:
+
+		if len(data) < 20:
+			data.append(float(stock["value"]))
+
+		if len(data) >= 20:
+			if not band:
+				band = Bollinger(data)
+			bands.append({"time": stock["time"], "value": band.value()})	
+
+	return bands
+		
+
 if __name__ == "__main__":
-	bb = BollingerBands(list(range(20)))
-	print(bb.value())
-	bb.append(21)
-	print(bb.value())
-	print(len(bb))
+	import json
+	import sys
+
+	pairs = []
+	with open(sys.argv[1], 'r') as f:
+		pairs = json.loads(f.read())
+
+	print(json.dumps(bollinger_band(pairs)))
+
 
 # vim: ts=4 sw=4 noexpandtab
