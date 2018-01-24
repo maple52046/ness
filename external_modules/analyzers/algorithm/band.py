@@ -12,46 +12,68 @@ def std(array, xbar):
 	return sqrt(s)
 	
 class Bollinger(list):
-	def __init__(self, prices, length=20):
+	"""
+	Bollinger object is inherit Python list. To create this object, 
+	you need to pass a initial array with 20 elements, then you can use "value" method 
+	to get the value of Bollinger band (a Python dictionary).
+
+	The length of this object will be fixed when the object is created,
+	when you append a value into this object,
+	it will drop the first element and re-calculate new value.
+	"""
+	def __init__(self, prices):
+		assert isinstance(prices, list)
 		list.__init__(self, prices)
-		self.mean = mean(prices)
-		self.std = std(prices, self.mean)
-		self.length = length
 
 	def append(self, price):
-		if self.__len__() >= self.length:
-			self.pop(0)
+		self.pop(0)
 		list.append(self, price)
-		self.mean = mean(self)
-		self.std = std(self, self.mean)
 
 	def value(self):
-		return {'top': (self.mean + self.std*2),
-			'middle': self.mean,
-			'bottom': (self.mean - self.std*2)}
+		m = mean(self)
+		s = std(self, m)
+		return {
+			'top': (m + s*2),
+			'middle': m,
+			'bottom': (m - s*2)
+		}
 
 def bollinger_band(stocks):
+	"""
+	Pass stock array to get Bollinger Bands
+	"""
 	band = None
 	data = []
 	bands = []
+
 	for stock in stocks:
 
 		if len(data) < 20:
+			# The data array is initial data of the bolling band
 			data.append(float(stock["value"]))
 
 		if len(data) >= 20:
 			if not band:
+				# Create a Bollinger band with initiate data
 				band = Bollinger(data)
-			bands.append({"time": stock["time"], "value": band.value()})	
+			else:
+				band.append(stock["value"])
+
+			bands.append({
+				"time": stock["time"], 
+				"bands": band.value(),
+				"value": stock["value"]
+			})
 
 	return bands
-		
 
 if __name__ == "__main__":
 	import json
 	import sys
 
 	pairs = []
+
+	# Load data
 	with open(sys.argv[1], 'r') as f:
 		pairs = json.loads(f.read())
 

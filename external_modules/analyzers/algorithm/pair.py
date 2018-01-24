@@ -3,15 +3,7 @@
 import json
 import dateutil
 
-def ratio(a, b):
-	assert isinstance(a, float)
-	assert isinstance(b, float)
-
-	if b < a:
-		(a, b) = (b, a)
-
-	ratio = float(a)/float(b)
-	return ratio 
+ratio = lambda a, b: float(a)/float(b)
 
 def trading_pair(primary, secondary, data):
 	assert isinstance(primary, str)
