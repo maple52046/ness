@@ -1,7 +1,9 @@
+const async = require('async')
 const fs = require('fs')
-const uuid = require('uuid/v4')
-const async = require('async');
+const json2csv = require('json2csv')
+const moment = require('moment')
 const pysh = require('python-shell')
+const uuid = require('uuid/v4')
 
 // Express router
 const express = require('express')
@@ -206,6 +208,41 @@ router.get('/strategy', function(req, res, next){
         default:
             res.json({})
     }
+})
+
+router.get('/stock/intraday', function(req, res, next){
+    var format = req.query.format || "json"
+
+    var qs = "select channel,price from twse"
+    influx.query(qs).then(stocks =>{
+        if (format == "csv"){
+            var fields = ["time"]
+            var data = []
+            for (var i=0; i<stocks.length ; i++){
+                var time = new Date(stocks[i].time)
+                time = moment(time).format("YYYY/MM/DD hh:mm:ss")
+                var channel = stocks[i]["channel"]
+                var price = stocks[i]["price"]
+                var last = data.length - 1 
+                if (data.length > 0 && data[last]["time"] == time)
+                    data[last][channel] = price
+                else{
+                    var stock = {time: time}
+                    stock[channel] = price
+                    data.push(stock)
+                }
+
+                if (fields.indexOf(channel) === -1)
+                    fields.push(channel)
+            }
+            res.setHeader('Content-Type', 'application/csv')
+            res.attachment('twse-intraday.csv');
+            res.send(json2csv({data: data, fields: fields}))
+        }else{
+            res.setHeader('Content-Type', 'application/json')
+            res.json(stocks)
+        }
+    })
 })
 
 module.exports = router
