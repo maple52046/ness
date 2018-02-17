@@ -1,0 +1,27 @@
+{
+  "name": "portal",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "dependencies": {
+    "async": "^2.6.0",
+    "body-parser": "~1.18.2",
+    "cookie-parser": "~1.4.3",
+    "debug": "~2.6.9",
+    "express": "~4.15.5",
+    "influx": "^5.0.7",
+    "json2csv": "^3.11.5",
+    "mariasql": "^0.2.6",
+    "moment": "^2.20.1",
+    "morgan": "~1.9.0",
+    "pug": "2.0.0-beta11",
+    "python-shell": "^0.4.0",
+    "serve-favicon": "~2.4.5",
+    "uuid": "^3.1.0"
+  },
+  "author": "Ku Chen-Hao <maple52046@gmail.com>",
+  "license": "GPLv3",
+  "description": "Ness is an open source finance platform"
+}
