@@ -1,6 +1,6 @@
 configparser==3.5.0
 lxml==3.5.0
 PyMySQL==0.7.2
-PyYAML==3.11
-requests==2.9.1
+pyyaml>=4.2b1
+requests>=2.20.0
 SQLAlchemy==1.0.11
